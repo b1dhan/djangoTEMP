@@ -1,6 +1,15 @@
-<form method="post">
+{%extends "firstapp/index.html"%}
+
+{%block title%}
+Create Post
+{%endblock title%}
+
+{%block content%}
+<form method="POST">
+    {%csrf_token%}
     {{post.as_p}}
     <button type="submit">
         Post
     </button>
 </form>
+{%endblock content%}
