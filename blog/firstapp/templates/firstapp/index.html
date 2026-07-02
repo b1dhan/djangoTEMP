@@ -38,10 +38,19 @@
           <a class="nav-link disabled" aria-disabled="true">Disabled</a>
         </li>
       </ul>
+      <div>
+        <form method="post" action="{%url 'logout_view'%}">
+          {% csrf_token%}
+          <button type="submit">Logout</button>
+        </form>
+      </div>
       <form class="d-flex" role="search">
         <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search"/>
         <button class="btn btn-outline-success" type="submit">Search</button>
       </form>
+      <p> username: {{user}} </p>
+      <p> <a href="{%url 'login_view' %}">Log In </a></p>
+      <p> <a href="{%url 'signup_view' %}">Sign Up</a></p>
     </div>
   </div>
 </nav>

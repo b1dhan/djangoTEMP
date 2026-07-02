@@ -41,3 +41,46 @@ def post_detail_view(request, post_id):
     post=get_object_or_404(Posts, id=post_id)
     return render(request, "firstapp/post_detail.html", {"post":post})
 
+from .forms import SignUpForm
+from django.contrib.auth.models import User
+def signup_view(request):
+    if request.method=='POST':
+        form=SignUpForm(request.POST)
+        if form.is_valid():
+            user=User.objects.create_user(
+                username=form.cleaned_data['username'],
+                password=form.cleaned_data['password']
+            )
+            user.save()
+            login(request,user)
+            return redirect('html_view')    
+    else:
+            form=SignUpForm()    
+    return render(request, "signup.html", {"form":form})        
+
+from django.contrib.auth import login,authenticate,logout      
+def login_view(request):
+    if request.method=="POST":
+        username=request.POST.get('username')
+        password=request.POST.get('password')
+
+        user=authenticate(request, username=username, password=password)
+
+        if user:
+            login(request, user)
+        
+        return redirect('html_view')
+        
+    return render(request, 'login.html')
+
+def logout_view(request):
+    if request.method=="POST":
+        logout(request)
+        return redirect("login_view")
+
+
+def edit_post(request, id):
+    post = get_object_or_404(Posts, pk=id, user = request.user)
+    # after submission of form
+    if request.method=="POST":
+        form=Posts(request.POST, isinstance=post)   

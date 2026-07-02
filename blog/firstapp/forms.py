@@ -33,3 +33,22 @@ class CreateBlogPostForm(forms.ModelForm):
             })
         }
         
+
+from django.contrib.auth.models import User
+class SignUpForm(forms.ModelForm):
+    username = forms.CharField(widget=forms.TextInput, required=True)
+    password = forms.CharField(widget=forms.PasswordInput, required=True)
+    confirm_password = forms.CharField(widget=forms.PasswordInput, required=True)
+
+    class Meta:
+        model = User
+        fields = ['username','password','confirm_password']
+
+    def clean():
+        cleaned_data=super().clean()
+        password=cleaned_data['password']
+        confirm_password=cleaned_data['confirm_password']
+
+        if password and confirm_password and password!=confirm_password:
+            raise forms.ValidationError("Password did not match.")
+        return cleaned_data
