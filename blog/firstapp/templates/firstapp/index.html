@@ -38,19 +38,21 @@
           <a class="nav-link disabled" aria-disabled="true">Disabled</a>
         </li>
       </ul>
-      <div>
-        <form method="post" action="{%url 'logout_view'%}">
-          {% csrf_token%}
-          <button type="submit">Logout</button>
-        </form>
-      </div>
-   <form class="d-flex" role="search" method="get" action="{% url 'html_view' %}">
+
+<form class="d-flex" role="search" method="get" action="{% url 'search' %}">
     <input class="form-control me-2" type="search" name="q" value="{{ q }}" placeholder="Search" aria-label="Search"/>
     <button class="btn btn-outline-success" type="submit">Search</button>
 </form>
-      <p> username: {{user}} </p>
+  {%if user.is_authenticated%}
+      <p> User: {{user}} </p>
+      <form method="post" action="{%url 'logout_view'%}">
+          {% csrf_token%}
+          <button type="submit">Logout</button>
+      </form>
+      {%else%}
       <p> <a href="{%url 'login_view' %}">Log In </a></p>
       <p> <a href="{%url 'signup_view' %}">Sign Up</a></p>
+  {%endif%}
     </div>
   </div>
 </nav>
@@ -59,12 +61,12 @@
     <h1 style="text-align: center">Welcome to Blog Posts!</h1>
         {%if posts%}
         {%for post in posts%}
-  <a href="{%url 'post_detail' post.id%}">
+  <a href="{%url 'post_detail' post.id%}" style="text-decoration: none;">
   <div class="card mb-4">       
    <div class="card-body">
     <h5 class="card-title">{{post.title}}</h5>
     <p class="text-seconadary">
-      <span>{{post.author}}</span>
+      <span>{{post.created_by}}</span>
       <span>{{post.category}}</span>
       <span>{{post.created_at|date:"m-d"}}</span>
     </p>

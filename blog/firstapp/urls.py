@@ -13,5 +13,6 @@ urlpatterns=[
     path('signup/', views.signup_view, name="signup_view"),
     path('login/', views.login_view, name="login_view"),
     path('logout/', views.logout_view, name="logout_view"),
-    path('post/<int:id>/edit_post/', views.edit_post, name="edit_post")
+    path('post/<int:id>/edit_post/', views.edit_post, name="edit_post"),
+    path('search/', views.search, name="search")
 ]

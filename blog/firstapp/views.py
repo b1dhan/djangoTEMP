@@ -3,6 +3,10 @@ from django.http import HttpResponse
 from .models import Posts
 from .forms import CreateBlogPostForm
 from django.contrib.auth.decorators import login_required
+import tkinter as tk
+from tkinter import messagebox
+root = tk.Tk()
+root.withdraw()
 
 # Create your views here.
 
@@ -14,15 +18,9 @@ def first_view(request):
 def profile_view(request, id):
     return HttpResponse(f'This is profile view {id}')
 
-# added search feature using GET, q parameter, __icontains condition
 def html_view(request):
-    q = request.GET.get('q', '').strip()
-
     posts = Posts.objects.all()
-    if q:
-        posts = posts.filter(title__icontains=q)
-
-    return render(request, 'firstapp/index.html', {"posts": posts, "q": q})
+    return render(request, 'firstapp/index.html', {"posts": posts})
 
 def intro_view(request):
     message='I am Robot'
@@ -34,8 +32,9 @@ def create_post(request):
     if request.method=="POST":
         post=CreateBlogPostForm(request.POST)
         if post.is_valid():
-            new_post = post.save(commit=False)   # capture the returned model instance
-            new_post.author = request.user       # set attribute, not dict key
+            new_post = post.save(commit=False)   
+            new_post.created_by = request.user    
+               
             new_post.save()
         return redirect('html_view')
     else:
@@ -100,3 +99,15 @@ def edit_post(request, id):
             "form":form
         })
 
+# protected features need auth user (logged in)
+@login_required
+def delete_post(request, id):
+    post = get_object_or_404
+
+# added search feature using GET, q parameter, __icontains condition
+def search(request):
+    q = request.GET.get('q', '').strip()
+    posts = Posts.objects.all()
+    if q:
+        posts = posts.filter(title__icontains=q)
+    return render(request, 'firstapp/index.html', {"posts": posts, "q": q})
