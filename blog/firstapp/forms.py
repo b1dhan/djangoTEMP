@@ -44,7 +44,7 @@ class SignUpForm(forms.ModelForm):
         model = User
         fields = ['username','password','confirm_password']
 
-    def clean():
+    def clean(self):
         cleaned_data=super().clean()
         password=cleaned_data['password']
         confirm_password=cleaned_data['confirm_password']

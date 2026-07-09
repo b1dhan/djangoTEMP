@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .models import Posts
 from .forms import CreateBlogPostForm
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 
@@ -13,21 +14,30 @@ def first_view(request):
 def profile_view(request, id):
     return HttpResponse(f'This is profile view {id}')
 
+# added search feature using GET, q parameter, __icontains condition
 def html_view(request):
-    posts=Posts.objects.all()
-    return render(request, 'firstapp/index.html', {"posts":posts})
+    q = request.GET.get('q', '').strip()
+
+    posts = Posts.objects.all()
+    if q:
+        posts = posts.filter(title__icontains=q)
+
+    return render(request, 'firstapp/index.html', {"posts": posts, "q": q})
 
 def intro_view(request):
     message='I am Robot'
     return render(request, 'firstapp/intro.html', {"message":message})
 
+@login_required
 def create_post(request):
     # CRUD operation
     if request.method=="POST":
         post=CreateBlogPostForm(request.POST)
         if post.is_valid():
-            post.save()
-            return redirect('html_view')
+            new_post = post.save(commit=False)   # capture the returned model instance
+            new_post.author = request.user       # set attribute, not dict key
+            new_post.save()
+        return redirect('html_view')
     else:
         post=CreateBlogPostForm()
     return render(request, "firstapp/createpost.html",{"post":post})
@@ -54,8 +64,8 @@ def signup_view(request):
             user.save()
             login(request,user)
             return redirect('html_view')    
-    else:
-            form=SignUpForm()    
+    else:   
+            form=SignUpForm()
     return render(request, "signup.html", {"form":form})        
 
 from django.contrib.auth import login,authenticate,logout      
@@ -63,24 +73,30 @@ def login_view(request):
     if request.method=="POST":
         username=request.POST.get('username')
         password=request.POST.get('password')
-
         user=authenticate(request, username=username, password=password)
-
         if user:
             login(request, user)
-        
         return redirect('html_view')
-        
     return render(request, 'login.html')
 
 def logout_view(request):
     if request.method=="POST":
         logout(request)
-        return redirect("login_view")
+        return redirect("html_view")
 
-
+@login_required
 def edit_post(request, id):
-    post = get_object_or_404(Posts, pk=id, user = request.user)
+    post = get_object_or_404(Posts, pk=id)
     # after submission of form
     if request.method=="POST":
-        form=Posts(request.POST, isinstance=post)   
+        form=CreateBlogPostForm(request.POST, instance=post)
+        if form.is_valid():
+            form.save()
+            return redirect('post_detail', post_id=id)
+    else:
+        form=CreateBlogPostForm(instance=post)
+    return render(request, "firstapp/edit_post.html", {
+            "post":post,
+            "form":form
+        })
+

@@ -12,5 +12,6 @@ urlpatterns=[
     path('post/<int:post_id>', views.post_detail_view, name="post_detail"),
     path('signup/', views.signup_view, name="signup_view"),
     path('login/', views.login_view, name="login_view"),
-    path('logout/', views.logout_view, name="logout_view")
+    path('logout/', views.logout_view, name="logout_view"),
+    path('post/<int:id>/edit_post/', views.edit_post, name="edit_post")
 ]

@@ -99,6 +99,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# configurations for login loginout 
+LOGIN_URL = 'login_view'
+LOGIN_REDIRECT_URL = 'html_view'
+LOGOUT_REDIRECT_URL = 'html_view'
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
