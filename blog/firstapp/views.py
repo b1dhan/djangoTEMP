@@ -3,10 +3,6 @@ from django.http import HttpResponse
 from .models import Posts
 from .forms import CreateBlogPostForm
 from django.contrib.auth.decorators import login_required
-import tkinter as tk
-from tkinter import messagebox
-root = tk.Tk()
-root.withdraw()
 
 # Create your views here.
 
@@ -15,7 +11,7 @@ root.withdraw()
 def first_view(request):
     return HttpResponse("Hello Friend this is first view")
 
-def profile_view(request, id):
+def pfp_view(request, id):
     return HttpResponse(f'This is profile view {id}')
 
 def html_view(request):
@@ -34,9 +30,11 @@ def create_post(request):
         if post.is_valid():
             new_post = post.save(commit=False)   
             new_post.created_by = request.user    
-               
             new_post.save()
-        return redirect('html_view')
+            messages.success(request, "Post created successfully.")
+            return redirect('html_view')
+        else:
+            messages.error(request, "Please fix the errors below.")
     else:
         post=CreateBlogPostForm()
     return render(request, "firstapp/createpost.html",{"post":post})
@@ -52,20 +50,25 @@ def post_detail_view(request, post_id):
 
 from .forms import SignUpForm
 from django.contrib.auth.models import User
+from django.contrib import messages
 def signup_view(request):
-    if request.method=='POST':
-        form=SignUpForm(request.POST)
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
         if form.is_valid():
-            user=User.objects.create_user(
+            user = User.objects.create_user(
                 username=form.cleaned_data['username'],
+                email=form.cleaned_data['email'],
                 password=form.cleaned_data['password']
             )
             user.save()
-            login(request,user)
-            return redirect('html_view')    
-    else:   
-            form=SignUpForm()
-    return render(request, "signup.html", {"form":form})        
+            login(request, user)
+            messages.success(request, f"Welcome, {user.username}! Your account was created.")
+            return redirect('html_view')
+        else:
+            messages.error(request, "Please fix the errors below.")
+    else:
+        form = SignUpForm()
+    return render(request, "signup.html", {"form": form})
 
 from django.contrib.auth import login,authenticate,logout      
 def login_view(request):
@@ -75,23 +78,34 @@ def login_view(request):
         user=authenticate(request, username=username, password=password)
         if user:
             login(request, user)
-        return redirect('html_view')
+            messages.success(request, f"Welcome back, {user.username}!")
+            return redirect('html_view')
+        else:
+            messages.error(request, "Invalid username or password.")
+            return redirect('login_view')
     return render(request, 'login.html')
 
 def logout_view(request):
     if request.method=="POST":
         logout(request)
+        messages.info(request, "You have been logged out.")
         return redirect("html_view")
 
+from django.core.exceptions import PermissionDenied
 @login_required
 def edit_post(request, id):
     post = get_object_or_404(Posts, pk=id)
+    if post.created_by != request.user:
+        raise PermissionDenied
     # after submission of form
     if request.method=="POST":
         form=CreateBlogPostForm(request.POST, instance=post)
         if form.is_valid():
             form.save()
+            messages.success(request, "Post updated successfully.")
             return redirect('post_detail', post_id=id)
+        else:
+            messages.error(request, "Please fix the errors below.")
     else:
         form=CreateBlogPostForm(instance=post)
     return render(request, "firstapp/edit_post.html", {
@@ -102,7 +116,16 @@ def edit_post(request, id):
 # protected features need auth user (logged in)
 @login_required
 def delete_post(request, id):
-    post = get_object_or_404
+    post = get_object_or_404(Posts, pk=id)
+
+    if post.created_by != request.user:
+        raise PermissionDenied
+
+    if request.method == "POST":
+        post.delete()
+        messages.success(request, "Post deleted.")
+        return redirect('html_view')
+    return render(request, "firstapp/deletepostconfirm.html", {"post": post})
 
 # added search feature using GET, q parameter, __icontains condition
 def search(request):
@@ -111,3 +134,30 @@ def search(request):
     if q:
         posts = posts.filter(title__icontains=q)
     return render(request, 'firstapp/index.html', {"posts": posts, "q": q})
+
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+
+@login_required
+def change_password(request):
+    if request.method == "POST":
+        form = PasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, "Your password was updated successfully.")
+            return redirect('password_change_done')
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = PasswordChangeForm(user=request.user)
+    return render(request, "firstapp/change_password.html", {"form": form})
+
+
+@login_required
+def change_password_done(request):
+    return render(request, "firstapp/change_password_done.html")
+
+@login_required
+def profile_view(request):
+    return render(request, "profile.html", {"user":request.user})

@@ -17,11 +17,13 @@
 <div>
     <p>{{post.content}}</p>
 </div>
-<div>
-    <a href="{%url 'edit_post' post.id %}">Edit</a>
-    <a href="">Delete</a>
-</div>
+
+{% if request.user == post.created_by %}
+    <a href="{% url 'edit_post' post.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+    <a href="{% url 'delete_post' post.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+{% endif %}
 {%else%}
+
 <div>
     post with id: {{post.id}} doesnt exist
 </div>.
